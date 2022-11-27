@@ -23,10 +23,13 @@ This specification uses the following terms:
 * This JSON is considered to be immutable, because changing it would change the computed [ImageID](#imageid).
 * Changing it means creating a new derived image, instead of changing the existing image.
 
-### Layer DiffID
+### Layer/Shard DiffID
 
-A layer DiffID is the digest over the layer's uncompressed tar archive and serialized in the descriptor digest format, e.g., `sha256:a9561eb1b190625c9adb5a9513e72c4dedafc1cb2d4c5236c9a6957ec7dfd5a9`.
-Layers SHOULD be packed and unpacked reproducibly to avoid changing the layer DiffID, for example by using [tar-split][] to save the tar headers.
+A layer/shard DiffID is the digest over the layer/shard's uncompressed tar archive and serialized in the descriptor digest format, e.g., `sha256:a9561eb1b190625c9adb5a9513e72c4dedafc1cb2d4c5236c9a6957ec7dfd5a9`.
+Layers/shards SHOULD be packed and unpacked reproducibly to avoid changing the layer DiffID, for example by using [tar-split][] to save the tar headers.
+
+The same data can always be used as either a layer or a shard.
+The naming just reflects how it is used.
 
 NOTE: Do not confuse DiffIDs with [layer digests](manifest.md#image-manifest-property-descriptions), often referenced in the manifest, which are digests over compressed or uncompressed content.
 
@@ -213,12 +216,21 @@ Note: Any OPTIONAL field MAY also be set to null, which is equivalent to being a
 
     - **type** *string*, REQUIRED
 
-       MUST be set to `layers`.
+       MUST be one of `layers` or `shards`.
        Implementations MUST generate an error if they encounter a unknown value while verifying or unpacking an image.
 
-    - **diff_ids** *array of strings*, REQUIRED
+    - If the type is `layers`:
 
-       An array of layer content hashes (`DiffIDs`), in order from first to last.
+       - **diff_ids** *array of strings*, REQUIRED
+
+          An array of layer content hashes (`DiffIDs`), in order from first to last.
+
+    - If the type is `shards`:
+
+       - **diff_id_mounts** *string-string map*, REQUIRED
+
+          A map from *mount points*, absolute paths, to shard content hashes (`DiffIDs`).
+          The order has no significance.
 
 - **history** *array of objects*, OPTIONAL
 
