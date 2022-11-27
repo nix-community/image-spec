@@ -91,6 +91,37 @@ Each image's ID is given by the SHA256 hash of its [configuration JSON](#image-j
 It is represented as a hexadecimal encoding of 256 bits, e.g., `sha256:a9561eb1b190625c9adb5a9513e72c4dedafc1cb2d4c5236c9a6957ec7dfd5a9`.
 Since the [configuration JSON](#image-json) that gets hashed references hashes of each layer in the image, this formulation of the ImageID makes images content-addressable.
 
+### MountPoint
+
+A mount point is an absolute path, a string with the folowing grammar:
+
+```
+mount-point ::= ("/" component)+
+component   ::= [a-z]+
+```
+
+The production "component" is one or more lowercase letters.
+A "mount-point" is then one or more slash-component pairs.
+The above can be converted into the following regular expression:
+
+```
+(?:/[a-z]+)+
+```
+
+#### Disjointness of mount points
+
+Two mount points are *disjoint* if the following is true:
+
+1. Parse each mount point into a list of its components.
+   (This is done by splitting on `/`.)
+
+2. Neither list is a prefix of the other.
+
+Note: If two lists are equal, each is a prefix of the other.
+This is opposed to a "proper prefix" where the prefix must be shorter.
+
+A set of mount points is *disjoint* if each possible pair of members is disjoint.
+
 ## Properties
 
 Note: Any OPTIONAL field MAY also be set to null, which is equivalent to being absent.
@@ -229,8 +260,9 @@ Note: Any OPTIONAL field MAY also be set to null, which is equivalent to being a
 
        - **diff_id_mounts** *string-string map*, REQUIRED
 
-          A map from *mount points*, absolute paths, to shard content hashes (`DiffIDs`).
-          The order has no significance.
+          A map from mount points (`MountPoints`), absolute paths, to shard content hashes (`DiffIDs`).
+          The set of mount points keys in the map MUST be *disjoint*, as defined above.
+          The order of map key-value entries SHOULD have no significance.
 
 - **history** *array of objects*, OPTIONAL
 
